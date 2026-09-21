@@ -67,3 +67,11 @@
 このリポジトリのコミットは、個人のメールアドレスではなくGitHubのnoreplyアドレス
 (`git config user.email`で確認できる、このリポジトリのローカル設定)を使うことを前提とする。
 何らかの理由で個人のメールアドレスに戻っていた場合は、コミット前に修正すること。
+
+## リリース公開時の確認
+
+- `Scripts/publish_release.sh`(gitタグのpushとGitHub Releaseの作成)を実行する前には、
+  実行前に必ずユーザーへ確認する(force-pushと同様、リモート・公開状態への影響が
+  大きい操作のため)。
+- リリース用のDMG/pkgなどのビルド生成物はgitに追跡させない(`.build/`は`.gitignore`対象の
+  まま維持する)。配布はGitHub Releasesへのアセット添付で行う。
