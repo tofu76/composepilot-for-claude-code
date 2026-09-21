@@ -4,6 +4,7 @@ final class StatusItemController: NSObject {
     private var statusItem: NSStatusItem?
     private var statusInfoItem: NSMenuItem?
     private var enabledToggleItem: NSMenuItem?
+    private var configObserver: NSObjectProtocol?
 
     private static let delayedInspectionSeconds: TimeInterval = 5
 
@@ -88,6 +89,16 @@ final class StatusItemController: NSObject {
 
         FocusTracker.shared.onFocusedDescriptorChanged = { descriptor in
             StatusReporter.appendFocusLog(descriptor)
+        }
+
+        EventTapController.shared.onStateChanged = { [weak self] _ in
+            self?.refreshMenuState()
+        }
+
+        configObserver = NotificationCenter.default.addObserver(
+            forName: ConfigStore.didChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            self?.refreshMenuState()
         }
 
         refreshMenuState()
