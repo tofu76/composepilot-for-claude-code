@@ -54,9 +54,10 @@ textarea.addEventListener('keydown', function(e) {
 
 ### 配布版(DMG / .pkg)
 
-DMGを開いて`ComposePilot.app`を`Applications`へドラッグするか、`.pkg`をダブルクリックして
-インストーラの案内に従う。初回起動時の案内画面でアクセシビリティ権限を許可すれば使える
-(**入力監視の許可は不要**)。
+[Releases](https://github.com/tofu76/composepilot-for-claude-code/releases/latest)から
+最新のDMGまたは`.pkg`をダウンロードする。DMGを開いて`ComposePilot.app`を`Applications`へ
+ドラッグするか、`.pkg`をダブルクリックしてインストーラの案内に従う。初回起動時の案内画面で
+アクセシビリティ権限を許可すれば使える(**入力監視の許可は不要**)。
 
 ### ソースから
 

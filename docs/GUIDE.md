@@ -183,6 +183,32 @@ xcrun notarytool store-credentials "プロファイル名" \
 DMGのみで完了し、pkgを作るには別途証明書が必要と表示する(pkgは配布経路を増やす追加要素で、
 DMGでの配布自体はこの証明書に依存しないため)。
 
+## 公開(GitHub Releases)
+
+署名・notarization済みのDMG/pkgはgit管理には含めず(`.build/`は`.gitignore`対象)、
+GitHub Releasesへの添付という形で配布する。署名鍵やnotarization用の認証情報をCI
+(GitHub Actions等)に預ける必要がなく、このマシンのキーチェーンの外に出ない。
+
+```sh
+Scripts/sign_and_notarize.sh   # 署名・notarization・DMG/pkg作成(前節)
+Scripts/publish_release.sh     # git tag作成・push・GitHub Releaseの作成とアセット添付
+```
+
+`publish_release.sh`は`Resources/Info.plist`の`CFBundleShortVersionString`からタグ名
+(`v1.0.0`など)を決め、以下を行う:
+
+- 作業ツリーがクリーンであること、同名タグがローカル・リモートに未使用であることを確認する
+- DMG/pkgをバージョン付きファイル名(`ComposePilot-1.0.0.dmg`等)へコピーし、
+  SHA256チェックサムファイルを添えて`.build/release-<version>/`にまとめる
+- 注釈付きgit tagを作成してpushする
+- `gh release create`でGitHub Releaseを作成し、上記一式を添付する
+  (リリースノートは`--generate-notes`でコミット履歴から自動生成する)
+
+**タグのpushとRelease作成はどちらもリモート・公開状態を変更する操作なので、
+実行前に必ず内容を確認すること**(`CLAUDE.md`参照)。リリース前に
+`Resources/Info.plist`の`CFBundleShortVersionString`を新しいバージョンへ更新して
+おくこと(更新し忘れて実行すると、同名タグの衝突でスクリプトが止まる)。
+
 ## 既知の限界
 
 - **変換中のEscapeでコメント下書き全体が消える**問題は、ComposePilotでは直せない。
