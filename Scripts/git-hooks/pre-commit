@@ -1,0 +1,61 @@
+#!/bin/bash
+# 個人情報・環境固有情報らしき文字列がコミットに含まれていないか機械的にチェックする。
+#
+# 汎用パターン(構造だけで判定できるもの)はこのファイルに直接書く。このファイル自体は
+# 公開リポジトリに含まれるため、実名・実メールアドレス・このマシン固有のユーザー名・
+# 無関係な私的プロジェクト名などの「具体的な値」は絶対にここへ書かない。それらは
+# gitignore対象のローカルファイル `Scripts/git-hooks/personal-terms.local` に列挙する
+# (1行1パターン、`#`で始まる行はコメントとして無視)。
+#
+# 有効化: このリポジトリで `git config core.hooksPath Scripts/git-hooks` を実行する。
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+# 追加された行だけを見る(削除行=個人情報の除去自体まで誤検知しないように)。
+diff=$(git diff --cached -U0 -- . ':!Scripts/git-hooks/pre-commit' | grep -E '^\+[^+]' || true)
+found=0
+
+report() {
+    local label="$1"
+    local matches="$2"
+    if [ -n "$matches" ]; then
+        echo "NG [$label]"
+        echo "$matches" | sed 's/^/    /'
+        found=1
+    fi
+}
+
+# --- 汎用パターン ---
+
+report "ホームディレクトリの絶対パス(/Users/<name>/)" \
+    "$(printf '%s\n' "$diff" | grep -nE '/Users/[A-Za-z0-9_.-]+/' || true)"
+
+report "個人向けメールドメインのアドレス" \
+    "$(printf '%s\n' "$diff" | grep -niE '[A-Za-z0-9._%+-]+@(gmail|icloud|outlook|hotmail|yahoo|me)\.[A-Za-z.]+' || true)"
+
+report "証明書CNに実名らしき値(Firstname Lastname (10桁ID)の形)" \
+    "$(printf '%s\n' "$diff" | grep -nE '(Apple Development|Developer ID (Application|Installer)): [A-Z][a-zA-Z]+ [A-Z][a-zA-Z]+ \([A-Z0-9]{10}\)' || true)"
+
+# --- ローカル限定パターン(実名・実メールアドレス・実ユーザー名・他プロジェクト名など) ---
+
+terms_file="Scripts/git-hooks/personal-terms.local"
+if [ -f "$terms_file" ]; then
+    while IFS= read -r term; do
+        [ -z "$term" ] && continue
+        case "$term" in
+            \#*) continue ;;
+        esac
+        report "個人情報リストに一致(\"$term\")" \
+            "$(printf '%s\n' "$diff" | grep -niF "$term" || true)"
+    done < "$terms_file"
+fi
+
+if [ "$found" -ne 0 ]; then
+    echo ""
+    echo "個人情報・環境固有情報らしき文字列がステージされた変更に含まれています。"
+    echo "誤検知であれば内容を確認のうえ、このスクリプトまたは personal-terms.local の"
+    echo "パターンを調整してください。本当に含まれている場合は該当箇所を直してから"
+    echo "再コミットしてください(バイパスする git commit --no-verify は目的上推奨しません)。"
+    exit 1
+fi

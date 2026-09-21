@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>BundleHasStrictIdentifier</key>
+		<true/>
+		<!--
+		pkgbuildの既定(true)のままだと、同じCFBundleIdentifierのバンドルが
+		どこか別の場所に既に存在・登録されている場合、指定した--install-locationではなく
+		そちらのパスを上書きしてしまう(pkgbuild --analyzeの既定出力もtrueになっている)。
+
+		実機のpkg導入テストで、開発用に~/Applications/ComposePilot.appを既に
+		使っていたところ、/Applicationsへのインストールのつもりが
+		~/Applications側を上書きする事故が2度発生し、原因がこれだった。
+		常に--install-locationどおりに入るよう、falseで固定する。
+		-->
+		<key>BundleIsRelocatable</key>
+		<false/>
+		<key>BundleIsVersionChecked</key>
+		<true/>
+		<key>BundleOverwriteAction</key>
+		<string>upgrade</string>
+		<key>RootRelativeBundlePath</key>
+		<string>Applications/ComposePilot.app</string>
+	</dict>
+</array>
+</plist>

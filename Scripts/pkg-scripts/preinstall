@@ -1,0 +1,24 @@
+#!/bin/bash
+# pkgインストール直前に走るスクリプト(pkgbuildの--scriptsから呼ばれる)。
+# 稼働中のComposePilotを終了させてから上書きさせる。install.shの同種の処理と同じ理由:
+# 稼働中のバンドルを差し替えると挙動が不定になる。
+set -uo pipefail
+
+# パターンは必ず `^...$` で完全一致させること。
+#
+# `pgrep -f` はコマンドライン全体に対する部分一致なので、アンカーなしで
+# "/Applications/ComposePilot.app/..." を渡すと、開発用の
+# "/Users/<name>/Applications/ComposePilot.app/..." のような、後方一致する
+# 別ユーザー・別インストールのプロセスまで巻き込んで終了させてしまう
+# (実機でこの事故が発生し、稼働中だった開発版が意図せず終了した)。
+PATTERN='^/Applications/ComposePilot\.app/Contents/MacOS/ComposePilot$'
+
+if pgrep -f "$PATTERN" >/dev/null 2>&1; then
+    pkill -f "$PATTERN" || true
+    for _ in $(seq 20); do
+        pgrep -f "$PATTERN" >/dev/null 2>&1 || break
+        sleep 0.25
+    done
+fi
+
+exit 0

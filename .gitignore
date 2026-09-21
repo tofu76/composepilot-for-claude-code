@@ -1,0 +1,9 @@
+.build/
+.swiftpm/
+*.xcuserstate
+.DS_Store
+Resources/AppIcon.icns
+
+# 実名・実メールアドレスなど個人情報のローカル限定リスト(Scripts/git-hooks/pre-commitが参照)。
+# 絶対にコミットしない。
+Scripts/git-hooks/personal-terms.local

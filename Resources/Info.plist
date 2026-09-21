@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>ComposePilot</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.tofu76.ComposePilot</string>
+    <!-- CFBundleName はメニューバーなど幅の狭い場所に出るため短い名前にする。
+         CFBundleDisplayName はFinderとシステム設定のアクセシビリティ一覧に出る名前で、
+         許可を与える際にどのアプリか判別できるよう用途まで含めた長い名前にする。 -->
+    <key>CFBundleName</key>
+    <string>ComposePilot</string>
+    <key>CFBundleDisplayName</key>
+    <string>ComposePilot for Claude Code</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>
