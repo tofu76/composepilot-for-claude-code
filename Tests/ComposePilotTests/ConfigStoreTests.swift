@@ -79,4 +79,13 @@ final class ConfigStoreTests: XCTestCase {
         ConfigStore.setCompletedOnboarding(true)
         XCTAssertTrue(ConfigStore.hasCompletedOnboarding())
     }
+
+    func testLastSeenBundleVersionDefaultsToNil() {
+        XCTAssertNil(ConfigStore.lastSeenBundleVersion())
+    }
+
+    func testSetLastSeenBundleVersionRoundTrips() {
+        ConfigStore.setLastSeenBundleVersion("3")
+        XCTAssertEqual(ConfigStore.lastSeenBundleVersion(), "3")
+    }
 }

@@ -11,6 +11,7 @@ enum ConfigStore {
         static let submitModifier = "ComposePilot.submitModifier"
         static let targetBundleIDs = "ComposePilot.targetBundleIDs"
         static let completedOnboarding = "ComposePilot.completedOnboarding"
+        static let lastSeenBundleVersion = "ComposePilot.lastSeenBundleVersion"
     }
 
     /// 設定が変わったことを各所へ知らせる。`EventTapController`はこれを受けて
@@ -68,6 +69,31 @@ enum ConfigStore {
 
     static func setCompletedOnboarding(_ value: Bool) {
         defaults.set(value, forKey: Key.completedOnboarding)
+    }
+
+    // MARK: - 起動時のバージョン遷移検知(初回/アップデート案内用)
+
+    /// 最後に`announceLaunchIfNeeded()`が案内を出した時点の`CFBundleVersion`。
+    /// 未設定(nil)は「まだ一度も案内していない」= 初回インストール扱いの合図になる。
+    static func lastSeenBundleVersion() -> String? {
+        defaults.string(forKey: Key.lastSeenBundleVersion)
+    }
+
+    static func setLastSeenBundleVersion(_ value: String) {
+        defaults.set(value, forKey: Key.lastSeenBundleVersion)
+    }
+
+    /// `CFBundleShortVersionString`ではなく`CFBundleVersion`を使う。前者は人間向けの
+    /// 表記揺れがあり得るが、後者はビルドのたびに必ずインクリメントされる規約
+    /// (`Resources/Info.plist`参照)のため遷移検知の比較キーとして安定している。
+    static func currentBundleVersion() -> String {
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+    }
+
+    /// ユーザーに見せる表示用バージョン(例: "1.0.2")。`currentBundleVersion()`は
+    /// 遷移検知専用の内部ビルド番号(例: "2")なので、通知文言などの表示には使わないこと。
+    static func currentShortVersion() -> String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
     }
 
     // MARK: - 送信として扱う修飾キー

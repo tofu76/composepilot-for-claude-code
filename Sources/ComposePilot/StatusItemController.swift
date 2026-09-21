@@ -5,8 +5,10 @@ final class StatusItemController: NSObject {
     private var statusInfoItem: NSMenuItem?
     private var enabledToggleItem: NSMenuItem?
     private var configObserver: NSObjectProtocol?
+    private var spotlightPopover: NSPopover?
 
     private static let delayedInspectionSeconds: TimeInterval = 5
+    private static let spotlightAutoCloseSeconds: TimeInterval = 6
 
     func setup() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -153,6 +155,44 @@ final class StatusItemController: NSObject {
         statusItem?.button?.image = menuBarImage(name)
     }
 
+    /// メニューバーアイコンの真下に矢印付きの吹き出しを自動表示する。初回インストール/
+    /// アップデート直後、ユーザーがアイコンの存在に気づけないという課題に対する自作の
+    /// 案内UI(`AppDelegate.announceLaunchIfNeeded()`から呼ばれる)。
+    ///
+    /// `UNUserNotificationCenter`と違いOSの通知許可が不要で、アイコンの位置を
+    /// 確実に指し示せるのが狙い。数秒後に自動で閉じるほか、枠外クリックでも閉じる
+    /// (`.transient`)。
+    func showSpotlight(text: String) {
+        guard spotlightPopover == nil, let button = statusItem?.button else { return }
+
+        let label = NSTextField(wrappingLabelWithString: text)
+        label.font = .systemFont(ofSize: 13)
+        label.preferredMaxLayoutWidth = 196
+        let container = NSViewController()
+        let contentView = NSView()
+        contentView.addSubview(label)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            contentView.widthAnchor.constraint(equalToConstant: 220),
+            label.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
+            label.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
+            label.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            label.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
+        ])
+        container.view = contentView
+
+        let popover = NSPopover()
+        popover.contentViewController = container
+        popover.behavior = .transient
+        popover.delegate = self
+        spotlightPopover = popover
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .maxY)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.spotlightAutoCloseSeconds) { [weak popover] in
+            popover?.performClose(nil)
+        }
+    }
+
     private func refreshMenuState() {
         enabledToggleItem?.state = ConfigStore.isEnabled() ? .on : .off
 
@@ -293,5 +333,11 @@ final class StatusItemController: NSObject {
 extension StatusItemController: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         refreshMenuState()
+    }
+}
+
+extension StatusItemController: NSPopoverDelegate {
+    func popoverDidClose(_ notification: Notification) {
+        spotlightPopover = nil
     }
 }

@@ -1,4 +1,5 @@
 import AppKit
+import UserNotifications
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItemController = StatusItemController()
@@ -6,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItemController.setup()
+        UNUserNotificationCenter.current().delegate = NotificationManager.shared
 
         // 初回起動時と、許可が無い状態での起動時は案内を出す。
         //
@@ -25,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func startEventTapWhenPermitted() {
         if EventTapController.shared.start() {
             StatusReporter.write(note: "event tap started at launch")
+            announceLaunchIfNeeded()
             return
         }
         StatusReporter.write(note: "waiting for permissions")
@@ -37,11 +40,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 // 案内画面が許可待ちで止まっている場合、ここが唯一の「許可された」検知点。
                 // TCCの付与はシステムから通知されないため、このポーリングに相乗りする。
                 OnboardingWindowController.shared.notifyPermissionGranted()
+                self?.announceLaunchIfNeeded()
             } else {
                 StatusReporter.write(note: "waiting for permissions")
             }
         }
         RunLoop.main.add(timer, forMode: .common)
         permissionRetryTimer = timer
+    }
+
+    /// メニューバーに追加された/更新されたことを、初回インストール・アップデート直後の
+    /// 起動でのみ1回だけ知らせる。イベントタップが実際に動き出して初めて「使える状態に
+    /// なった」と言えるため、`startEventTapWhenPermitted()`の成功パス(即時成功・
+    /// 許可待ちリトライ後の成功のいずれも)から呼ぶ。
+    private func announceLaunchIfNeeded() {
+        let current = ConfigStore.currentBundleVersion()
+        let transition = LaunchTransition.evaluate(
+            stored: ConfigStore.lastSeenBundleVersion(), current: current
+        )
+
+        let body: String
+        switch transition {
+        case .freshInstall:
+            body = "ComposePilotがメニューバーに追加されました。"
+        case .updated:
+            body = "ComposePilotがv\(ConfigStore.currentShortVersion())に更新されました。"
+        case .unchanged:
+            return
+        }
+
+        statusItemController.showSpotlight(text: body)
+        NotificationManager.shared.requestAuthorizationIfNeeded { granted in
+            guard granted else { return }
+            DispatchQueue.main.async {
+                NotificationManager.shared.notify(title: "ComposePilot", body: body)
+            }
+        }
+        ConfigStore.setLastSeenBundleVersion(current)
     }
 }
