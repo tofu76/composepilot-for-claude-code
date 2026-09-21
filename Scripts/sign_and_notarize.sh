@@ -55,12 +55,57 @@ codesign --verify --strict --verbose=2 "$APP_DIR"
 
 echo "DMG作成中..."
 # /Applications へのシンボリックリンクを同梱し、ドラッグで導入できるようにする。
-rm -rf "$DMG_STAGE" "$DMG_PATH"
+VOLUME_NAME="ComposePilot for Claude Code"
+RW_DMG=".build/ComposePilot-rw.dmg"
+rm -rf "$DMG_STAGE" "$DMG_PATH" "$RW_DMG"
 mkdir -p "$DMG_STAGE"
 cp -R "$APP_DIR" "$DMG_STAGE/"
 ln -s /Applications "$DMG_STAGE/Applications"
-hdiutil create -volname "ComposePilot for Claude Code" -srcfolder "$DMG_STAGE" \
-    -ov -format UDZO "$DMG_PATH"
+
+# 書き込み可能なDMGを作ってFinderで見た目(背景画像・アイコン配置)を整えてから、
+# 配布用に圧縮フォーマット(UDZO)へ変換する。`osascript`でFinderを操作するため、
+# ログイン中のGUIセッションが必要(ヘッドレスCIでは動かない。手元での実行前提)。
+hdiutil create -volname "$VOLUME_NAME" -srcfolder "$DMG_STAGE" \
+    -ov -format UDRW -fs HFS+ "$RW_DMG"
+
+MOUNT_DIR=$(mktemp -d)
+# `-nobrowse`を付けるとFinderからこのボリュームを名前解決できず、後続の`tell disk`を
+# 使ったAppleScriptがことごとく失敗する(実機で確認済み。「取り出すことはできません」という
+# 一見無関係なエラーになる)。見た目を整える必要があるため、あえて`-nobrowse`は付けない。
+hdiutil attach "$RW_DMG" -mountpoint "$MOUNT_DIR" -noautoopen
+
+mkdir -p "$MOUNT_DIR/.background"
+cp Resources/dmg-background.png "$MOUNT_DIR/.background/background.png"
+
+# アイコンサイズ(96)と座標(165,130)/(495,130)は`Scripts/generate_dmg_background.py`の
+# 矢印・キャプション位置と対応させてある。背景画像のレイアウトを変えたら両方直すこと。
+osascript <<APPLESCRIPT
+tell application "Finder"
+    tell disk "$VOLUME_NAME"
+        open
+        set current view of container window to icon view
+        set toolbar visible of container window to false
+        set statusbar visible of container window to false
+        set the bounds of container window to {400, 100, 1060, 500}
+        set theViewOptions to the icon view options of container window
+        set arrangement of theViewOptions to not arranged
+        set icon size of theViewOptions to 96
+        set background picture of theViewOptions to file ".background:background.png"
+        set position of item "ComposePilot.app" of container window to {165, 130}
+        set position of item "Applications" of container window to {495, 130}
+        -- 注意: bare `close` はこの文脈でdisk自体(=取り出し/eject)に解決されうるため、
+        -- 必ず`container window`を明示して閉じること。
+        close container window
+        open
+        update without registering applications
+        delay 2
+    end tell
+end tell
+APPLESCRIPT
+
+hdiutil detach "$MOUNT_DIR"
+hdiutil convert "$RW_DMG" -format UDZO -o "$DMG_PATH"
+rm -f "$RW_DMG"
 
 echo "公証(notarization)申請中... (Appleのサーバに送信されるため時間がかかります)"
 xcrun notarytool submit "$DMG_PATH" --keychain-profile "$NOTARY_PROFILE" --wait
@@ -94,6 +139,7 @@ Developer ID Applicationとは別の証明書です)。
 MESSAGE
 else
     echo "Developer ID Installer署名でpkgも作成中..."
+    COMPONENT_PKG_PATH=".build/ComposePilot-component.pkg"
     PKG_PATH=".build/ComposePilot.pkg"
     VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Resources/Info.plist)
 
@@ -104,14 +150,17 @@ else
     mkdir -p "$PKG_ROOT/Applications"
     cp -R "$APP_DIR" "$PKG_ROOT/Applications/"
 
+    # コンポーネントpkg自体は署名しない。署名はproductbuildが作る最終的な配布物
+    # (welcome/conclusion画面付き)側でだけ行う。
     pkgbuild --root "$PKG_ROOT" \
         --component-plist Scripts/pkg-component.plist \
         --install-location /Applications \
         --scripts Scripts/pkg-scripts \
         --identifier com.tofu76.ComposePilot.installer \
         --version "$VERSION" \
-        --sign "$INSTALLER_IDENTITY" \
-        "$PKG_PATH"
+        "$COMPONENT_PKG_PATH"
+
+    ./Scripts/build_final_pkg.sh "$COMPONENT_PKG_PATH" "$PKG_PATH" "$INSTALLER_IDENTITY"
 
     echo "pkgの公証(notarization)申請中..."
     xcrun notarytool submit "$PKG_PATH" --keychain-profile "$NOTARY_PROFILE" --wait

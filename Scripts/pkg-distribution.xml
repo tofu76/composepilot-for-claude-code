@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  productbuildの「distribution」オプションに渡すテンプレート。welcome/conclusion画面を
+  追加するために使う。Scripts/build_final_pkg.shが実行時にCOMPONENT_PKG_FILENAMEを
+  実際のコンポーネントpkgのファイル名へ置換してから使う(pkg-refのidはpkgbuildの
+  identifierオプションと一致させる必要があるため、Scripts/pkg-component.plist、
+  build_pkg.sh、sign_and_notarize.shの com.tofu76.ComposePilot.installer と
+  揃えてあるが、変更する場合は3箇所とも直すこと)。
+-->
+<installer-gui-script minSpecVersion="1">
+    <title>ComposePilot for Claude Code</title>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+    <options customize="never" require-scripts="false" rootVolumeOnly="true"/>
+    <choices-outline>
+        <line choice="default">
+            <line choice="com.tofu76.ComposePilot.installer"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="com.tofu76.ComposePilot.installer" visible="false">
+        <pkg-ref id="com.tofu76.ComposePilot.installer"/>
+    </choice>
+    <pkg-ref id="com.tofu76.ComposePilot.installer" version="0" onConclusion="none">COMPONENT_PKG_FILENAME</pkg-ref>
+</installer-gui-script>

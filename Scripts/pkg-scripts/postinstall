@@ -1,0 +1,17 @@
+#!/bin/bash
+# pkgインストール完了直後に走るスクリプト(pkgbuildの--scriptsから呼ばれる)。
+# インストール後にユーザーがメニューバーの追加に気づけないという課題への対応として、
+# Scripts/install.shの`open "$DEST"`と同じ意図でアプリを自動起動する。
+#
+# pkgのスクリプトはroot権限で実行されるため、GUIログイン中のコンソールユーザーの
+# セッションでアプリを開く必要がある(root権限のままopenしてもGUIセッションには
+# 届かない)。
+set -uo pipefail
+
+CONSOLE_USER=$(stat -f%Su /dev/console)
+
+if [ -n "$CONSOLE_USER" ] && [ "$CONSOLE_USER" != "root" ]; then
+    sudo -u "$CONSOLE_USER" open -a "/Applications/ComposePilot.app"
+fi
+
+exit 0

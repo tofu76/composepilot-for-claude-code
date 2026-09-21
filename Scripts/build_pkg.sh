@@ -19,6 +19,7 @@ CONFIG="${1:-debug}"
 VERSION=$(
     /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Resources/Info.plist
 )
+COMPONENT_PKG_PATH=".build/ComposePilot-component.pkg"
 PKG_PATH=".build/ComposePilot.pkg"
 
 # `--component`だけでは、同じバンドルIDのアプリが既にどこか(例: 開発用の
@@ -31,22 +32,23 @@ rm -rf "$PKG_ROOT"
 mkdir -p "$PKG_ROOT/Applications"
 cp -R ".build/ComposePilot.app" "$PKG_ROOT/Applications/"
 
-PKGBUILD_ARGS=(
-    --root "$PKG_ROOT"
-    --component-plist Scripts/pkg-component.plist
-    --install-location /Applications
-    --scripts Scripts/pkg-scripts
-    --identifier com.tofu76.ComposePilot.installer
-    --version "$VERSION"
-)
+# コンポーネントpkg自体は署名しない。署名はproductbuildが作る最終的な配布物
+# (welcome/conclusion画面付き)側でだけ行う。
+pkgbuild \
+    --root "$PKG_ROOT" \
+    --component-plist Scripts/pkg-component.plist \
+    --install-location /Applications \
+    --scripts Scripts/pkg-scripts \
+    --identifier com.tofu76.ComposePilot.installer \
+    --version "$VERSION" \
+    "$COMPONENT_PKG_PATH"
 
 if [ -n "${COMPOSEPILOT_INSTALLER_SIGN_IDENTITY:-}" ]; then
-    PKGBUILD_ARGS+=(--sign "$COMPOSEPILOT_INSTALLER_SIGN_IDENTITY")
+    ./Scripts/build_final_pkg.sh "$COMPONENT_PKG_PATH" "$PKG_PATH" "$COMPOSEPILOT_INSTALLER_SIGN_IDENTITY"
 else
     echo "警告: COMPOSEPILOT_INSTALLER_SIGN_IDENTITY 未指定のため未署名で作成します。"
     echo "      配布用にはDeveloper ID Installer証明書での署名が必要です。"
+    ./Scripts/build_final_pkg.sh "$COMPONENT_PKG_PATH" "$PKG_PATH"
 fi
-
-pkgbuild "${PKGBUILD_ARGS[@]}" "$PKG_PATH"
 
 echo "Built: $PKG_PATH"

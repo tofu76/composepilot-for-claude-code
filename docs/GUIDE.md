@@ -7,21 +7,29 @@
 
 ### 配布版(DMG)
 
-1. DMGを開き、`ComposePilot.app`を`Applications`へドラッグする
-2. 起動すると案内画面が出るので、指示に従ってアクセシビリティを許可する
+1. DMGを開き、案内(背景画像の矢印)に従って`ComposePilot.app`を`Applications`へ
+   ドラッグする
+2. `Applications`から`ComposePilot.app`を起動すると案内画面が出るので、指示に従って
+   アクセシビリティを許可する
 3. 許可されると自動で次に進む。最後に「ログイン時に起動」(既定でオン)と
    送信キー(既定でCtrl+Enter)を確認する。どちらも後から設定画面で変更できる
 
 **入力監視の許可は不要**(アクセシビリティだけで`CGEventTap`を作成できる)。
 システム設定の「入力監視」の一覧にComposePilotが出てこなくても問題ない。
 
+**画面右上のメニューバーを確認すること。** Dockアイコンが出ないアプリのため、
+起動したことはメニューバーのアイコンでしか分からない。初回起動時はアイコン付近に
+ポップアップが、通知センターにバナーが1回だけ表示される。
+
 ### 配布版(.pkg)
 
 ドラッグ操作の代わりに、ダブルクリックで進むmacOS標準のインストーラも使える。
 
-1. `ComposePilot.pkg`をダブルクリックし、インストーラの案内に従う
+1. `ComposePilot.pkg`をダブルクリックし、インストーラの案内(welcome画面)に従う
    (`/Applications`へ導入するため管理者パスワードの入力が必要)
-2. 完了後は「配布版(DMG)」の手順2以降と同じ
+2. インストール完了画面(conclusion)が出た後、アプリが自動的に起動する
+   (`Scripts/pkg-scripts/postinstall`による)
+3. 完了後は「配布版(DMG)」の手順2以降と同じ
 
 DMGと導入先(`/Applications`)を揃えているため、DMG版からの入れ替えでも
 アクセシビリティ許可を引き継げる。
@@ -92,6 +100,12 @@ Developer ID Installer証明書を検出した場合に自動で行う(後述)�
 
 アイコン素材は`Resources/MenuBarIcons/`(状態ごとのPNG、@1x/@2x)。
 カーソルを乗せると「ComposePilot for Claude Code」とツールチップが出る。
+
+**初回インストール時、およびアップデートでバージョンが変わった直後の起動では**、
+アイコンの真下にポップアップ(`StatusItemController.showSpotlight`)と、通知センターの
+バナー(`NotificationManager`、要通知許可)が1回だけ自動表示される。どちらもイベント
+タップが実際に動き出した時点(`AppDelegate.announceLaunchIfNeeded()`)で発火し、
+同一バージョンでの再起動では出ない(`ConfigStore.lastSeenBundleVersion`で判定)。
 
 **メニューや設定画面を開くと自アプリがフロントになるため、コメント欄からフォーカスが外れる。**
 コメントUIには「フォーカスが外れたら閉じる」処理があり、開いているダイアログが閉じて
@@ -177,6 +191,17 @@ Scripts/sign_and_notarize.sh
 xcrun notarytool store-credentials "プロファイル名" \
     --apple-id "<Apple ID>" --team-id "<TEAMID>" --password "<App用パスワード>"
 ```
+
+DMGの背景画像(`Resources/dmg-background.png`)はコミット済みの生成物。デザインを
+変更する場合は`Scripts/generate_dmg_background.py`(要`pip install --user Pillow`)を
+直してから再実行し、`Scripts/sign_and_notarize.sh`側のアイコン座標(`set position of item`)
+も画像のレイアウトに合わせて直すこと。`Scripts/sign_and_notarize.sh`はDMG作成時に
+`osascript`でFinderを操作するため、ログイン中のGUIセッションが必要(ヘッドレス環境では
+動かない)。
+
+`.pkg`のwelcome/conclusion画面(`Scripts/pkg-resources/`)は`Scripts/pkg-distribution.xml`
+経由で`productbuild`(`Scripts/build_final_pkg.sh`)が組み込む。`pkgbuild`はコンポーネント
+pkgを作るだけで署名せず、最終的な署名は`productbuild`側でのみ行う。
 
 このスクリプトはDMGに加えて、`Developer ID Installer`証明書(`Developer ID Application`とは
 別の証明書クラス)がキーチェーンにあれば`.pkg`も自動で署名・notarize・stapleする。無い場合は
