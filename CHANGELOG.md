@@ -11,6 +11,8 @@
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-09-22
+
 ### Added
 
 - 初回インストール・アップデート直後の起動時に、メニューバーへアイコンが追加された
@@ -40,6 +42,7 @@
   Option)、設定画面、初回起動時の案内、メニューバーからのアンインストール、
   DMG / .pkgインストーラを含む。詳細は[README.md](README.md)を参照。
 
-[Unreleased]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/tofu76/composepilot-for-claude-code/releases/tag/v1.0.0
