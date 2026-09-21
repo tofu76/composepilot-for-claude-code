@@ -198,16 +198,21 @@ Scripts/publish_release.sh     # git tag作成・push・GitHub Releaseの作成�
 (`v1.0.0`など)を決め、以下を行う:
 
 - 作業ツリーがクリーンであること、同名タグがローカル・リモートに未使用であることを確認する
+- [CHANGELOG.md](../CHANGELOG.md)に該当バージョンの見出し(`## [1.0.0] - 2026-01-01`等)と
+  内容が記載されていることを確認する(無ければエラーで止まる)
 - DMG/pkgをバージョン付きファイル名(`ComposePilot-1.0.0.dmg`等)へコピーし、
   SHA256チェックサムファイルを添えて`.build/release-<version>/`にまとめる
 - 注釈付きgit tagを作成してpushする
 - `gh release create`でGitHub Releaseを作成し、上記一式を添付する
-  (リリースノートは`--generate-notes`でコミット履歴から自動生成する)
+  (リリースノートは`CHANGELOG.md`の該当バージョンの節をそのまま使う)
+
+**リリース前に`CHANGELOG.md`の`[Unreleased]`節を新しいバージョン見出しへ書き換え、
+`Resources/Info.plist`の`CFBundleShortVersionString`も同じバージョンへ更新しておくこと。**
+どちらかを忘れると`publish_release.sh`がエラーで止まる(前者は「見出しが見つからない」、
+後者は前バージョンのタグとの衝突として検出される)。
 
 **タグのpushとRelease作成はどちらもリモート・公開状態を変更する操作なので、
-実行前に必ず内容を確認すること**(`CLAUDE.md`参照)。リリース前に
-`Resources/Info.plist`の`CFBundleShortVersionString`を新しいバージョンへ更新して
-おくこと(更新し忘れて実行すると、同名タグの衝突でスクリプトが止まる)。
+実行前に必ず内容を確認すること**(`CLAUDE.md`参照)。
 
 ## 既知の限界
 

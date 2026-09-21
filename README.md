@@ -107,6 +107,7 @@ DMG/.pkg/ソースそれぞれの詳細な手順、旧バージョン(EnterGuard
   壊れた時の直し方、状態確認ファイル、Developer ID署名+notarizationによる配布手順など
 - [docs/plan-comment-ime-enter-report.md](docs/plan-comment-ime-enter-report.md) —
   拡張機能側の原因分析(上流への報告用)
+- [CHANGELOG.md](CHANGELOG.md) — バージョンごとの変更履歴
 
 ## ライセンス
 
