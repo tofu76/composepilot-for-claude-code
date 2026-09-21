@@ -1,7 +1,9 @@
 import Foundation
 
 enum ConfigStore {
-    private static let defaults = UserDefaults.standard
+    /// テストから隔離された`UserDefaults`インスタンスへ差し替えられるよう`var`にしている。
+    /// 本番では`.standard`のまま。
+    static var defaults: UserDefaults = .standard
 
     private enum Key {
         static let enabled = "ComposePilot.enabled"

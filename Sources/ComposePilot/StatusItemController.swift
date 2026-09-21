@@ -129,17 +129,27 @@ final class StatusItemController: NSObject {
         return image
     }
 
-    private func refreshIcon() {
-        let name: String
-        if !EventTapController.shared.isRunning || !ConfigStore.isEnabled() {
-            name = "StatusOff"
+    /// アイコン画像名を決める純粋なロジック。`refreshIcon()`から状態参照を切り離してあり、
+    /// テストから直接検証できる(このロジックの配線漏れが過去の「常に非活性表示になる」
+    /// 不具合の原因だったため、回帰防止用に分離した)。
+    static func iconName(isRunning: Bool, isEnabled: Bool, isTargetDetected: Bool) -> String {
+        if !isRunning || !isEnabled {
+            return "StatusOff"
         } else if isTargetDetected {
             // 介入中: コメント欄にフォーカスがあり、Enterを書き換える状態
-            name = "StatusActive"
+            return "StatusActive"
         } else {
             // 監視中: 稼働しているが対象にフォーカスが無い
-            name = "StatusWatching"
+            return "StatusWatching"
         }
+    }
+
+    private func refreshIcon() {
+        let name = Self.iconName(
+            isRunning: EventTapController.shared.isRunning,
+            isEnabled: ConfigStore.isEnabled(),
+            isTargetDetected: isTargetDetected
+        )
         statusItem?.button?.image = menuBarImage(name)
     }
 
