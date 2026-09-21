@@ -8,6 +8,11 @@ let package = Package(
         .executableTarget(
             name: "ComposePilot",
             path: "Sources/ComposePilot"
-        )
+        ),
+        .testTarget(
+            name: "ComposePilotTests",
+            dependencies: ["ComposePilot"],
+            path: "Tests/ComposePilotTests"
+        ),
     ]
 )
