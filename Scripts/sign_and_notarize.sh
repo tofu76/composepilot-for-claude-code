@@ -63,25 +63,32 @@ cp -R "$APP_DIR" "$DMG_STAGE/"
 ln -s /Applications "$DMG_STAGE/Applications"
 
 # 書き込み可能なDMGを作ってFinderで見た目(背景画像・アイコン配置)を整えてから、
-# 配布用に圧縮フォーマット(UDZO)へ変換する。`osascript`でFinderを操作するため、
+# 配布用に圧縮フォーマット(UDZO)へ変換する。osascriptでFinderを操作するため、
 # ログイン中のGUIセッションが必要(ヘッドレスCIでは動かない。手元での実行前提)。
 hdiutil create -volname "$VOLUME_NAME" -srcfolder "$DMG_STAGE" \
     -ov -format UDRW -fs HFS+ "$RW_DMG"
 
-MOUNT_DIR=$(mktemp -d)
-# `-nobrowse`を付けるとFinderからこのボリュームを名前解決できず、後続の`tell disk`を
-# 使ったAppleScriptがことごとく失敗する(実機で確認済み。「取り出すことはできません」という
-# 一見無関係なエラーになる)。見た目を整える必要があるため、あえて`-nobrowse`は付けない。
-hdiutil attach "$RW_DMG" -mountpoint "$MOUNT_DIR" -noautoopen
+# `-nobrowse`や独自の`-mountpoint`を指定すると、Finderがこのボリュームを名前解決できず
+# 後続のAppleScriptがことごとく失敗する(実機で検証済み)。同名の別ボリュームが既に
+# マウント済みだと実際のボリューム名は自動的にリネームされる(例: "... 1")ため、
+# 固定の`$VOLUME_NAME`を決め打ちせず、attachの出力から実際のマウントパスを読み取って使う。
+ATTACH_OUTPUT=$(hdiutil attach "$RW_DMG" -noautoopen)
+MOUNT_POINT=$(echo "$ATTACH_OUTPUT" | grep -o '/Volumes/.*')
+MOUNTED_VOLUME_NAME=$(basename "$MOUNT_POINT")
 
-mkdir -p "$MOUNT_DIR/.background"
-cp Resources/dmg-background.png "$MOUNT_DIR/.background/background.png"
+mkdir -p "$MOUNT_POINT/.background"
+cp Resources/dmg-background.png "$MOUNT_POINT/.background/background.png"
 
 # アイコンサイズ(96)と座標(165,130)/(495,130)は`Scripts/generate_dmg_background.py`の
 # 矢印・キャプション位置と対応させてある。背景画像のレイアウトを変えたら両方直すこと。
+#
+# 以下のヒアドキュメントは$MOUNTED_VOLUME_NAMEを展開するため引用符なし(<<APPLESCRIPT)に
+# している。引用符なしヒアドキュメントはバッククォートをコマンド置換として評価してしまう
+# ため、このAppleScript本文やコメントにバッククォートを含めないこと(実機で
+# 「close: command not found」という形で踏んだ)。
 osascript <<APPLESCRIPT
 tell application "Finder"
-    tell disk "$VOLUME_NAME"
+    tell disk "$MOUNTED_VOLUME_NAME"
         open
         set current view of container window to icon view
         set toolbar visible of container window to false
@@ -93,8 +100,8 @@ tell application "Finder"
         set background picture of theViewOptions to file ".background:background.png"
         set position of item "ComposePilot.app" of container window to {165, 130}
         set position of item "Applications" of container window to {495, 130}
-        -- 注意: bare `close` はこの文脈でdisk自体(=取り出し/eject)に解決されうるため、
-        -- 必ず`container window`を明示して閉じること。
+        -- 「close」だけだとdiskの取り出し(eject)に解決されうるため、必ず
+        -- 「container window」を明示して閉じること(実機で検証済み)。
         close container window
         open
         update without registering applications
@@ -103,7 +110,7 @@ tell application "Finder"
 end tell
 APPLESCRIPT
 
-hdiutil detach "$MOUNT_DIR"
+hdiutil detach "$MOUNT_POINT"
 hdiutil convert "$RW_DMG" -format UDZO -o "$DMG_PATH"
 rm -f "$RW_DMG"
 
