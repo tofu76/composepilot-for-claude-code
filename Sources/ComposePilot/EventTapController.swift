@@ -31,6 +31,9 @@ final class EventTapController {
     private var runLoopSource: CFRunLoopSource?
     private(set) var isRunning = false
 
+    /// タップの起動状態が変化した時だけ呼ばれる(FocusTracker.onDetectionStateChangedと同じ設計)。
+    var onStateChanged: ((Bool) -> Void)?
+
     /// 実際にフラグを書き換えた回数(keyDown/keyUpの両方を数える)。
     /// 検証時に「本当に介入したのか」を後から確認するための唯一の手がかりになる。
     /// タップのコールバックは専用スレッドで動くためロックで保護する。
@@ -153,6 +156,7 @@ final class EventTapController {
         workerThread.name = "ComposePilot.EventTap"
         workerThread.start()
         isRunning = true
+        onStateChanged?(true)
         NSLog(
             "ComposePilot: event tap started (inputMonitoring=%@)",
             PermissionsManager.isInputMonitoringTrusted() ? "granted" : "not granted"
