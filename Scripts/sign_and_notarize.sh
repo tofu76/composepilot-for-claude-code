@@ -79,6 +79,11 @@ MOUNTED_VOLUME_NAME=$(basename "$MOUNT_POINT")
 mkdir -p "$MOUNT_POINT/.background"
 cp Resources/dmg-background.png "$MOUNT_POINT/.background/background.png"
 
+# attach直後だとFinderがディスクをまだ認識しておらず、直後のosascriptが
+# 「disk "..."を取り出すことはできません (-1728)」で失敗することがある(実機で再現・
+# 2秒待てば解消することを確認済み)。Finder側の認識を待つ。
+sleep 2
+
 # アイコンサイズ(96)と座標(165,130)/(495,130)は`Scripts/generate_dmg_background.py`の
 # 矢印・キャプション位置と対応させてある。背景画像のレイアウトを変えたら両方直すこと。
 #

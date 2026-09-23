@@ -349,6 +349,22 @@ private struct GeneralSettingsTab: View {
                     Text(model.isAccessibilityTrusted ? "許可済み" : "未許可")
                         .foregroundStyle(model.isAccessibilityTrusted ? .green : .red)
                 }
+                if !model.isAccessibilityTrusted {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Text("""
+                            このままではEnterキーの誤送信を防止できません。下のボタンで\
+                            システム設定を開き、一覧の「ComposePilot for Claude Code」を\
+                            オンにしてください。
+                            """)
+                            .bold()
+                    }
+                    .font(.callout)
+                    .padding(12)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
                 Button("アクセシビリティ設定を開く") {
                     PermissionsManager.openAccessibilitySettings()
                 }

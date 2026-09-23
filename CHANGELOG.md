@@ -11,6 +11,12 @@
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-09-24
+
+### Added
+
+- 設定画面(一般タブ)に、アクセシビリティ許可がOFFのときだけ強調表示の案内文を追加。
+
 ## [1.0.3] - 2026-09-23
 
 ### Changed
@@ -49,7 +55,8 @@
   Option)、設定画面、初回起動時の案内、メニューバーからのアンインストール、
   DMG / .pkgインストーラを含む。詳細は[README.md](README.md)を参照。
 
-[Unreleased]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.0...v1.0.1
