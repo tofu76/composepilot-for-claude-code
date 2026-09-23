@@ -44,8 +44,9 @@ Scripts/install.sh          # ビルド → ~/Applications へ配置 → 起動
 TCCの識別がコード署名のハッシュに固定され、**再ビルドの度に許可が失効する**ため。
 `COMPOSEPILOT_SIGN_IDENTITY`で署名identityを指定できる。
 
-アイコンは`Resources/AppIcon.svg`から`Scripts/make_icon.sh`で生成する
-(`.icns`は生成物なのでリポジトリには入れていない。ビルド時に自動生成される)。
+アイコンは`Resources/AppIcon.icns`がリポジトリにコミット済みの正式アセット。
+作り直す場合は`Scripts/make_icon.sh <素材ファイル>`(SVG/PNGどちらも可)で生成し、
+生成物を上書きコミットする。
 
 `.pkg`をローカルで試す場合は`Scripts/build_pkg.sh`(`.build/ComposePilot.pkg`を生成、
 未署名)。配布用の署名付きビルドは`Scripts/sign_and_notarize.sh`が

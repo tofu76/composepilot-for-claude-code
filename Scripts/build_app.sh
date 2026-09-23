@@ -16,13 +16,9 @@ mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
 cp "$BIN_PATH" "$CONTENTS/MacOS/ComposePilot"
 cp "Resources/Info.plist" "$CONTENTS/Info.plist"
 
-# アイコンは素材(AppIcon.svg)からの生成物。未生成なら作ってから取り込む。
-if [ ! -f "Resources/AppIcon.icns" ] && [ -f "Resources/AppIcon.svg" ]; then
-    ./Scripts/make_icon.sh >/dev/null
-fi
-if [ -f "Resources/AppIcon.icns" ]; then
-    cp "Resources/AppIcon.icns" "$CONTENTS/Resources/AppIcon.icns"
-fi
+# アイコンはリポジトリにコミット済みの正式アセット(Resources/AppIcon.icns)を
+# そのまま使う。作り直す場合はScripts/make_icon.shを参照。
+cp "Resources/AppIcon.icns" "$CONTENTS/Resources/AppIcon.icns"
 
 # メニューバー用アイコン(3状態×@1x/@2x)。StatusItemControllerが実行時にバンドルの
 # Resourcesから直接読み込むため、SPMのリソース宣言ではなくここでコピーする。

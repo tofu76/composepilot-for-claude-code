@@ -11,6 +11,13 @@
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-09-23
+
+### Changed
+
+- アプリアイコンを変更。あわせてアイコンをSVG素材からのビルド時生成ではなく、
+  `Resources/AppIcon.icns`をリポジトリにコミットする方式に変更。
+
 ## [1.0.2] - 2026-09-22
 
 ### Added
@@ -42,7 +49,8 @@
   Option)、設定画面、初回起動時の案内、メニューバーからのアンインストール、
   DMG / .pkgインストーラを含む。詳細は[README.md](README.md)を参照。
 
-[Unreleased]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/tofu76/composepilot-for-claude-code/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/tofu76/composepilot-for-claude-code/releases/tag/v1.0.0
